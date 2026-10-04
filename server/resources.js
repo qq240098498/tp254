@@ -359,6 +359,7 @@ function decide(data, batchId, payload) {
     longestExcursionMinutes: check.longestMinutes,
     totalExcursionMinutes: check.totalMinutes,
     chainGapCount: check.chain.gapCount,
+    chainGapMinutes: check.chain.totalGapMinutes,
     basis: String(payload.basis || '').trim(),
     remark: String(payload.remark || ''),
   };

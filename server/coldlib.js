@@ -73,15 +73,18 @@ function excursionStats(data, batchId) {
   });
 }
 
-// 断链：相邻记录的时刻差超过门槛
+// 断链：相邻记录的时刻差超过门槛。
+// 计入时长 = 相邻记录真实时刻差 − 正常记录间隔（间隔内本就该有一条记录，不算缺失）；
+// 每处的实际缺口与计入时长都列出，累计时长按逐处计入时长相加。
 function chainGaps(data, batchId) {
   const settings = data.settings;
+  const interval = Number(settings.recordIntervalMinutes);
   const rows = effectiveRecords(data, batchId);
   const gaps = [];
   for (let i = 1; i < rows.length; i += 1) {
     const minutes = store.minutesBetween(rows[i - 1].at, rows[i].at);
     if (minutes > Number(settings.chainGapMinutes)) {
-      gaps.push({ from: rows[i - 1].at, to: rows[i].at, minutes, countedMinutes: Number(settings.recordIntervalMinutes) });
+      gaps.push({ from: rows[i - 1].at, to: rows[i].at, minutes, countedMinutes: Math.max(0, minutes - interval) });
     }
   }
   return { gaps, gapCount: gaps.length, totalGapMinutes: gaps.reduce((acc, g) => acc + g.countedMinutes, 0) };
@@ -149,6 +152,7 @@ function releaseCheck(data, batch) {
     recordCount: stats.recordCount,
     firstAt: stats.firstAt,
     lastAt: stats.lastAt,
+    recordIntervalMinutes: Number(settings.recordIntervalMinutes),
     chain,
     expiredProbes: expired,
     conditions,

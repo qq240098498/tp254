@@ -418,10 +418,22 @@ function batchDetailRow(b) {
     segmentsHtml = '<table class="mini-table"><thead><tr><th>起</th><th>止</th><th class="num">时长(分)</th><th class="num">峰值(℃)</th><th class="num">点数</th></tr></thead><tbody>' + segRows + '</tbody></table>';
   }
 
-  const gaps = (d.chainGaps || []).map(function (g) {
+  const chainGapsData = d.chainGaps || [];
+  const chainTotal = chainGapsData.reduce(function (acc, g) { return acc + num(g.countedMinutes); }, 0);
+  const chainInterval = (d.releaseCheck && d.releaseCheck.recordIntervalMinutes != null)
+    ? num(d.releaseCheck.recordIntervalMinutes)
+    : (state.summary && state.summary.settings ? num(state.summary.settings.recordIntervalMinutes) : 0);
+  const gaps = chainGapsData.map(function (g) {
     return '<tr><td>' + esc(g.from) + '</td><td>' + esc(g.to) + '</td><td class="num">' + num(g.minutes) + '</td>' +
       '<td class="num">' + num(g.countedMinutes) + '</td></tr>';
   }).join('') || '<tr><td colspan="4" class="empty">没有断链缺口</td></tr>';
+  if (chainGapsData.length) {
+    gaps += '<tr class="row-sum"><td colspan="2">断链累计时长（逐处计入相加）</td>' +
+      '<td class="num">实际 ' + chainGapsData.reduce(function (a, g) { return a + num(g.minutes); }, 0) + '</td>' +
+      '<td class="num">' + chainTotal + '</td></tr>';
+  }
+  const gapNote = '口径：相邻两条记录的真实时刻差超过断链门槛算一处；每处计入时长 = 实际时刻差 − 正常记录间隔（' +
+    chainInterval + ' 分钟），累计时长为逐处计入相加之和。';
 
   const check = d.releaseCheck || {};
   const conds = (check.conditions || []).slice();
@@ -452,7 +464,8 @@ function batchDetailRow(b) {
     '<div class="detail-block"><h4>温度记录（' + (d.records || []).length + '）</h4>' +
     '<table class="mini-table"><thead><tr><th>时刻</th><th>探头</th><th class="num">温度(℃)</th><th>来源</th><th>是否超限</th><th>探头是否过期</th></tr></thead><tbody>' + records + '</tbody></table></div>' +
     '<div class="detail-block"><h4>超限段（' + (d.segments || []).length + '）</h4>' + segmentsHtml +
-    '<h4>断链缺口（' + (d.chainGaps || []).length + '）</h4>' +
+    '<h4>断链缺口（' + chainGapsData.length + '）</h4>' +
+    '<div class="detail-note">' + esc(gapNote) + '</div>' +
     '<table class="mini-table"><thead><tr><th>起</th><th>止</th><th class="num">实际(分)</th><th class="num">计入(分)</th></tr></thead><tbody>' + gaps + '</tbody></table></div>' +
     '<div class="detail-block"><h4>放行判定</h4><ul class="cond-list">' + condHtml + '</ul>' +
     '<h4>已过校准期的探头（' + expired.length + '）</h4>' +
@@ -570,7 +583,7 @@ async function loadReleasesView() {
   }
   const tbody = $('releaseRows');
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="10" class="empty">没有符合条件的放行记录</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11" class="empty">没有符合条件的放行记录</td></tr>';
     return;
   }
   tbody.innerHTML = rows.map(function (r) {
@@ -583,6 +596,7 @@ async function loadReleasesView() {
       '<td class="num">' + num(r.longestExcursionMinutes) + '</td>' +
       '<td class="num">' + num(r.totalExcursionMinutes) + '</td>' +
       '<td class="num">' + num(r.chainGapCount) + '</td>' +
+      '<td class="num">' + num(r.chainGapMinutes) + '</td>' +
       '<td>' + esc(r.basis) + '</td>' +
       '<td>' + esc(r.remark) + '</td>' +
       '</tr>';
