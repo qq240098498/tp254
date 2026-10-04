@@ -9647,7 +9647,8 @@
       "totalExcursionMinutes": 0,
       "chainGapCount": 0,
       "basis": "温度记录齐全，全程在温度带内",
-      "remark": ""
+      "remark": "",
+      "chainTotalGapMinutes": 0
     }
   ]
 }

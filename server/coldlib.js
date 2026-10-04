@@ -73,18 +73,22 @@ function excursionStats(data, batchId) {
   });
 }
 
-// 断链：相邻记录的时刻差超过门槛
+// 断链：相邻记录的时刻差超过门槛算一处；
+// 每处计入时长 = 实际时刻差 − 正常记录间隔（recordIntervalMinutes），累计为各处计入之和
 function chainGaps(data, batchId) {
   const settings = data.settings;
   const rows = effectiveRecords(data, batchId);
+  const interval = Number(settings.recordIntervalMinutes);
   const gaps = [];
   for (let i = 1; i < rows.length; i += 1) {
     const minutes = store.minutesBetween(rows[i - 1].at, rows[i].at);
     if (minutes > Number(settings.chainGapMinutes)) {
-      gaps.push({ from: rows[i - 1].at, to: rows[i].at, minutes, countedMinutes: Number(settings.recordIntervalMinutes) });
+      gaps.push({ from: rows[i - 1].at, to: rows[i].at, minutes, countedMinutes: Math.max(0, minutes - interval) });
     }
   }
-  return { gaps, gapCount: gaps.length, totalGapMinutes: gaps.reduce((acc, g) => acc + g.countedMinutes, 0) };
+  const totalGapMinutes = gaps.reduce((acc, g) => acc + g.countedMinutes, 0);
+  const actualTotalMinutes = gaps.reduce((acc, g) => acc + g.minutes, 0);
+  return { gaps, gapCount: gaps.length, totalGapMinutes, actualTotalMinutes };
 }
 
 // MKT：平均动力学温度

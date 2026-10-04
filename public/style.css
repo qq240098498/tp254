@@ -222,6 +222,7 @@ tr.row-detail > td { background: #f7fbfc; border-bottom: 1px solid var(--line); 
 .mini-table { border-collapse: collapse; width: 100%; background: #fff; border: 1px solid var(--line-soft); border-radius: 4px; }
 .mini-table th, .mini-table td { padding: 4px 8px; border-bottom: 1px solid var(--line-soft); text-align: left; white-space: nowrap; }
 .mini-table th { background: #f1f8fa; color: var(--primary-dark); }
+.mini-table tr.row-total td { font-weight: 600; background: #f1f8fa; }
 .detail-actions { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
 
 .pill { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 12px; border: 1px solid var(--line); background: #fff; }

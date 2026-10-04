@@ -53,6 +53,7 @@ function decorateBatch(data, batch) {
     totalExcursionMinutes: stats.totalMinutes,
     mkt: check.mkt,
     chainGapCount: check.chain.gapCount,
+    chainTotalGapMinutes: check.chain.totalGapMinutes,
     expiredProbeCodes: check.expiredProbes.map((p) => p.probeCode),
     releaseCheck: check,
     releaseCount: releases.length,
@@ -211,6 +212,7 @@ function batchDetail(data, id) {
     effectiveRecords: coldlib.effectiveRecords(data, id).map((r) => Object.assign({}, r, { probeCode: probeCode(data, r.probeId) })),
     segments: coldlib.excursionStats(data, id).segments,
     chainGaps: coldlib.chainGaps(data, id).gaps,
+    chainActualTotalMinutes: coldlib.chainGaps(data, id).actualTotalMinutes,
     releases: data.releases.filter((r) => r.batchId === id).slice().sort((a, b) => (a.decidedAt < b.decidedAt ? 1 : -1)),
   });
 }
@@ -359,6 +361,7 @@ function decide(data, batchId, payload) {
     longestExcursionMinutes: check.longestMinutes,
     totalExcursionMinutes: check.totalMinutes,
     chainGapCount: check.chain.gapCount,
+    chainTotalGapMinutes: check.chain.totalGapMinutes,
     basis: String(payload.basis || '').trim(),
     remark: String(payload.remark || ''),
   };
